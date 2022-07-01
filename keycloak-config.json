@@ -1,0 +1,13 @@
+{
+  "realm": "dev",
+  "auth-server-url": "http://localhost:8082/auth/",
+  "ssl-required": "external",
+  "resource": "dropwizard-project",
+  "verify-token-audience": true,
+  "credentials": {
+    "secret": "eca94c43-37d0-4845-ba94-3ecdeda18901"
+  },
+  "use-resource-role-mappings": true,
+  "confidential-port": 0,
+  "policy-enforcer": {}
+}
