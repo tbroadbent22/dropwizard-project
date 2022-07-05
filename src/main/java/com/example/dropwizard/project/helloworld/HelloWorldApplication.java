@@ -40,7 +40,6 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
     public void initialize(Bootstrap<HelloWorldConfiguration> bootstrap) {
     }
 
-    //TODO setup keycloak config within run
     @Override
     public void run(HelloWorldConfiguration configuration,
                     Environment environment)
@@ -74,20 +73,13 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
 
         final Set<String> authRoles = new HashSet<String>();
         authRoles.add("USER");
+        securityHandler.setRoles(authRoles);
+        constraint.setRoles(authRoles.toArray(new String[0]));
 
         final ConstraintMapping constraintMapping = new ConstraintMapping();
         constraintMapping.setPathSpec("/*");
         constraintMapping.setConstraint(constraint);
         securityHandler.addConstraintMapping(constraintMapping);
-        
-        final ConstraintMapping constraintMappingExclusion = new ConstraintMapping();
-        constraintMappingExclusion.setPathSpec("/hello-world");
-        constraintMappingExclusion.setMethodOmissions(new String[]{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"});
-        constraintMappingExclusion.setConstraint(constraint);
-        securityHandler.addConstraintMapping(constraintMappingExclusion);
-
-//        final ConstraintMapping constraintMapping = new ConstraintMapping();
-//        final Constraint constraint = new Constraint(Constraint.__BASIC_AUTH);
 
         KeycloakConfig config = getConfig();
         final KeycloakJettyAuthenticatorExt keycloak = new KeycloakJettyAuthenticatorExt();
@@ -100,26 +92,6 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
         
         environment.servlets().setSessionHandler(sessionHandler);
     }
-
-//    private void initAuth(final Environment environment)
-//    {
-//        final ConstraintSecurityHandler securityHandler = new ConstraintSecurityHandler();
-//        environment.getApplicationContext().setSecurityHandler(securityHandler);
-//        final Constraint constraint = new Constraint();
-//        constraint.setAuthenticate(true);
-//        
-//        System.out.println("HELLO WORLD ");
-//
-//        KeycloakConfig config = getConfig();
-//        
-//        final KeycloakJettyAuthenticatorExt keycloak = new KeycloakJettyAuthenticatorExt();
-////        System.out.println("ENV: " + environment.getApplicationContext());
-////        environment.getApplicationContext().getSecurityHandler().setAuthenticator(keycloak);
-//        final KeycloakResolver keycloakResolver = new KeycloakResolver(config);
-//        keycloak.setConfigResolver(keycloakResolver);
-//        keycloak.initializeKeycloak();
-//        System.out.println("AUTH METHOD: ");
-//    }
 
     private KeycloakConfig getConfig()
     {
