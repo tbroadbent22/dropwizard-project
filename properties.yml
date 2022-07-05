@@ -1,2 +1,24 @@
-template: Hello, %s!
-defaultName: Stranger
+
+pac4jFactory:
+  # those protect the whole application at Jersey level
+  globalFilters:
+    - matchers: excludeUserSession
+      authorizers: isAuthenticated
+  servlet:
+    security: security
+    callback: callback
+    logout: logout
+  matchers:
+    # this let the /user/session url be handled by the annotations
+    excludeUserSession:
+      class: org.pac4j.core.matching.PathMatcher
+      excludePath: ^/user/session$
+  callbackUrl: /user/session
+  defaultClient: DirectBasicAuthClient
+  clients:
+    - org.pac4j.http.client.direct.DirectBasicAuthClient:
+        authenticator:
+          class: org.pac4j.http.credentials.authenticator.test.SimpleTestUsernamePasswordAuthenticator
+          
+#template: Hello, %s!
+#defaultName: Stranger

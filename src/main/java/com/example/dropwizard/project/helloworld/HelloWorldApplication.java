@@ -24,12 +24,21 @@ import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.eclipse.jetty.util.security.Constraint;
+import org.pac4j.dropwizard.Pac4jBundle;
+import org.pac4j.dropwizard.Pac4jFactory;
 
 public class HelloWorldApplication extends Application<HelloWorldConfiguration>
 {
     public static void main(String[] args) throws Exception {
         new HelloWorldApplication().run(args);
     }
+    
+ final Pac4jBundle<HelloWorldConfiguration> bundle = new Pac4jBundle<HelloWorldConfiguration>() {
+        @Override
+        public Pac4jFactory getPac4jFactory(HelloWorldConfiguration configuration) {
+            return configuration.getPac4jFactory();
+        }
+    };
     
     @Override
     public String getName() {
@@ -38,6 +47,7 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
 
     @Override
     public void initialize(Bootstrap<HelloWorldConfiguration> bootstrap) {
+        bootstrap.addBundle(bundle);
     }
 
     @Override

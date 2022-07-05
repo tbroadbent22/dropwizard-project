@@ -18,6 +18,17 @@
             <version>1.18.20</version>
         </dependency>
         <dependency>
+            <groupId>org.pac4j</groupId>
+            <artifactId>dropwizard-pac4j</artifactId>
+            <version>5.0.0</version>
+            <type>jar</type>
+        </dependency>
+        <dependency>
+            <groupId>org.pac4j</groupId>
+            <artifactId>pac4j-oidc</artifactId>
+            <version>5.0.0</version>
+        </dependency>
+        <dependency>
             <groupId>org.keycloak</groupId>
             <artifactId>keycloak-adapter-core</artifactId>
             <version>14.0.0</version>
