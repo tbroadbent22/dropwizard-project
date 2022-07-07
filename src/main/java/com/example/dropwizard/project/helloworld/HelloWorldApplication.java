@@ -26,6 +26,8 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.eclipse.jetty.util.security.Constraint;
 import org.pac4j.dropwizard.Pac4jBundle;
 import org.pac4j.dropwizard.Pac4jFactory;
+import org.pac4j.oidc.client.KeycloakOidcClient;
+import org.pac4j.oidc.config.OidcConfiguration;
 
 public class HelloWorldApplication extends Application<HelloWorldConfiguration>
 {
@@ -62,7 +64,7 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
         System.out.println("ENV: " + environment);
         environment.jersey().register(resource);
         initCors(environment);
-        initAuth(environment);
+//        initAuth(environment);
     }
     
     private void initCors(final Environment environment) {
@@ -114,5 +116,14 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
         config.setResource("dropwizard-project");
         
         return config;
+    }
+    
+    private void getPac4jConfig()
+    {
+        OidcConfiguration config = new OidcConfiguration();
+        config.setClientId("dev");
+        config.setSecret("34f37982-733c-49ed-a840-11166f044ef8");
+        config.setDiscoveryURI("http://localhost:8082");
+        KeycloakOidcClient client = new KeycloakOidcClient();
     }
 }

@@ -1,18 +1,22 @@
 
-pac4jFactory:
+pac4j:
   # those protect the whole application at Jersey level
   globalFilters:
     - matchers: excludeUserSession
       authorizers: isAuthenticated
   servlet:
-    security: security
-    callback: callback
-    logout: logout
+    security: 
+        - mapping: /*
+    callback: 
+        - mapping: /*
+    logout: 
+        - mapping: /*
   matchers:
     # this let the /user/session url be handled by the annotations
     excludeUserSession:
       class: org.pac4j.core.matching.PathMatcher
-      excludePath: ^/user/session$
+      excludedPath: 
+          - ^/*
   callbackUrl: /user/session
   defaultClient: DirectBasicAuthClient
   clients:
