@@ -9,8 +9,6 @@ import com.example.dropwizard.helloworld.keycloak.KeycloakJettyAuthenticatorExt;
 import com.example.dropwizard.helloworld.keycloak.KeycloakResolver;
 import com.example.dropwizard.project.helloworld.resources.HelloWorldResource;
 import io.dropwizard.Application;
-import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
-import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import java.util.EnumSet;
@@ -18,7 +16,6 @@ import java.util.HashSet;
 import java.util.Set;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
-import org.eclipse.jetty.http.HttpCookie;
 import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.server.session.SessionHandler;
@@ -27,7 +24,10 @@ import org.eclipse.jetty.util.security.Constraint;
 import org.pac4j.dropwizard.Pac4jBundle;
 import org.pac4j.dropwizard.Pac4jFactory;
 import org.pac4j.oidc.client.KeycloakOidcClient;
+import org.pac4j.oidc.config.KeycloakOidcConfiguration;
 import org.pac4j.oidc.config.OidcConfiguration;
+import org.pac4j.oidc.credentials.authenticator.OidcAuthenticator;
+import org.pac4j.oidc.profile.keycloak.KeycloakOidcProfile;
 
 public class HelloWorldApplication extends Application<HelloWorldConfiguration>
 {
@@ -35,12 +35,13 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
         new HelloWorldApplication().run(args);
     }
     
- final Pac4jBundle<HelloWorldConfiguration> bundle = new Pac4jBundle<HelloWorldConfiguration>() {
-        @Override
-        public Pac4jFactory getPac4jFactory(HelloWorldConfiguration configuration) {
-            return configuration.getPac4jFactory();
-        }
-    };
+// final Pac4jBundle<HelloWorldConfiguration> bundle = new Pac4jBundle<HelloWorldConfiguration>() {
+//        @Override
+//        public Pac4jFactory getPac4jFactory(HelloWorldConfiguration configuration) {
+//            return new Pac4jFactory();
+////            return configuration.getPac4jFactory();
+//        }
+//    };
     
     @Override
     public String getName() {
@@ -49,7 +50,7 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
 
     @Override
     public void initialize(Bootstrap<HelloWorldConfiguration> bootstrap) {
-        bootstrap.addBundle(bundle);
+//        bootstrap.addBundle(bundle);
     }
 
     @Override
@@ -64,7 +65,7 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
         System.out.println("ENV: " + environment);
         environment.jersey().register(resource);
         initCors(environment);
-//        initAuth(environment);
+        initAuth(environment);
     }
     
     private void initCors(final Environment environment) {
@@ -92,17 +93,26 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
         constraintMapping.setPathSpec("/*");
         constraintMapping.setConstraint(constraint);
         securityHandler.addConstraintMapping(constraintMapping);
+        
+//        final ConstraintMapping constraintMappingExclusion = new ConstraintMapping();
+//        constraintMappingExclusion.setPathSpec("/hello-world");
+//        constraintMappingExclusion.setMethodOmissions(new String[]{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"});
+//        constraintMappingExclusion.setConstraint(constraint);
+//        securityHandler.addConstraintMapping(constraintMappingExclusion);
 
+        
+//        getPac4jConfig();
+        
         KeycloakConfig config = getConfig();
         final KeycloakJettyAuthenticatorExt keycloak = new KeycloakJettyAuthenticatorExt();
         environment.getApplicationContext().getSecurityHandler().setAuthenticator(keycloak);
         final KeycloakResolver keycloakResolver = new KeycloakResolver(config);
         keycloak.setConfigResolver(keycloakResolver);
 
-        final SessionHandler sessionHandler = new SessionHandler();
-        sessionHandler.getSessionCookieConfig().setSecure(false);
-        
-        environment.servlets().setSessionHandler(sessionHandler);
+//        final SessionHandler sessionHandler = new SessionHandler();
+//        sessionHandler.getSessionCookieConfig().setSecure(false);
+//        
+//        environment.servlets().setSessionHandler(sessionHandler);
     }
 
     private KeycloakConfig getConfig()
@@ -117,13 +127,38 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
         
         return config;
     }
-    
-    private void getPac4jConfig()
-    {
-        OidcConfiguration config = new OidcConfiguration();
-        config.setClientId("dev");
-        config.setSecret("34f37982-733c-49ed-a840-11166f044ef8");
-        config.setDiscoveryURI("http://localhost:8082");
-        KeycloakOidcClient client = new KeycloakOidcClient();
-    }
+//    
+//    private OidcAuthenticator getPac4jConfig()
+//    {   
+//        KeycloakOidcConfiguration kcConfig = new KeycloakOidcConfiguration();
+//        kcConfig.setBaseUri("http://localhost:8082/auth");
+//        kcConfig.setRealm("dev");
+//        kcConfig.setSecret("34f37982-733c-49ed-a840-11166f044ef8");
+//        kcConfig.setClientId("dropwizard-project");
+//        KeycloakOidcClient client = new KeycloakOidcClient(kcConfig);
+//        client.setCallbackUrl("http://localhost:8082/auth");
+//        client.init(true);
+//        
+//        return new OidcAuthenticator(kcConfig, client);
+//        
+//        
+//    }
+//    
+//    private void setupAuthenticator(){
+////        OidcAuthenticator auth = new OidcAuthenticator();
+//    }
+//    
+//    private KeycloakOidcProfile getKcConfig() {
+//        KeycloakOidcProfile kc = new KeycloakOidcProfile();
+//        kc.setClientName("dropwizard-project");
+//        kc.setId("dev");
+//        
+//        final Set<String> authRoles = new HashSet<String>();
+//        authRoles.add("USER");
+//        kc.setRoles(authRoles);
+//        
+////        Credentials c = new Credentials();
+//        
+//        return kc;
+//    }
 }
