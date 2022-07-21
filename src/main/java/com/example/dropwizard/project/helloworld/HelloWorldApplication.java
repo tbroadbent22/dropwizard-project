@@ -4,30 +4,39 @@
  */
 package com.example.dropwizard.project.helloworld;
 
+import com.example.dropwizard.helloworld.keycloak.CustomAuthorizer;
 import com.example.dropwizard.helloworld.keycloak.KeycloakConfig;
 import com.example.dropwizard.helloworld.keycloak.KeycloakJettyAuthenticatorExt;
 import com.example.dropwizard.helloworld.keycloak.KeycloakResolver;
 import com.example.dropwizard.project.helloworld.resources.HelloWorldResource;
+import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
-import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.eclipse.jetty.util.security.Constraint;
+import org.pac4j.core.client.Clients;
+import org.pac4j.core.client.DirectClient;
+import org.pac4j.core.config.Config;
+import org.pac4j.core.context.session.SessionStore;
+import org.pac4j.core.http.callback.NoParameterCallbackUrlResolver;
+import org.pac4j.core.profile.creator.ProfileCreator;
 import org.pac4j.dropwizard.Pac4jBundle;
 import org.pac4j.dropwizard.Pac4jFactory;
+import org.pac4j.http.client.direct.DirectBasicAuthClient;
+import org.pac4j.http.credentials.authenticator.test.SimpleTestUsernamePasswordAuthenticator;
+import org.pac4j.jee.filter.SecurityFilter;
 import org.pac4j.oidc.client.KeycloakOidcClient;
 import org.pac4j.oidc.config.KeycloakOidcConfiguration;
-import org.pac4j.oidc.config.OidcConfiguration;
-import org.pac4j.oidc.credentials.authenticator.OidcAuthenticator;
-import org.pac4j.oidc.profile.keycloak.KeycloakOidcProfile;
+import org.pac4j.oidc.credentials.authenticator.UserInfoOidcAuthenticator;
 
 public class HelloWorldApplication extends Application<HelloWorldConfiguration>
 {
@@ -35,13 +44,13 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
         new HelloWorldApplication().run(args);
     }
     
-// final Pac4jBundle<HelloWorldConfiguration> bundle = new Pac4jBundle<HelloWorldConfiguration>() {
-//        @Override
-//        public Pac4jFactory getPac4jFactory(HelloWorldConfiguration configuration) {
+ final Pac4jBundle<HelloWorldConfiguration> bundle = new Pac4jBundle<HelloWorldConfiguration>() {
+        @Override
+        public Pac4jFactory getPac4jFactory(HelloWorldConfiguration configuration) {
 //            return new Pac4jFactory();
-////            return configuration.getPac4jFactory();
-//        }
-//    };
+            return configuration.getPac4jFactory();
+        }
+    };
     
     @Override
     public String getName() {
@@ -50,7 +59,7 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
 
     @Override
     public void initialize(Bootstrap<HelloWorldConfiguration> bootstrap) {
-//        bootstrap.addBundle(bundle);
+        bootstrap.addBundle(bundle);
     }
 
     @Override
@@ -62,10 +71,52 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
             configuration.getDefaultName()
         );
         
+
+
         System.out.println("ENV: " + environment);
         environment.jersey().register(resource);
-        initCors(environment);
-        initAuth(environment);
+//        initCors(environment);
+//        initAuth(environment);
+        
+        SecurityFilter authFilter = new SecurityFilter();
+        authFilter.setSharedConfig(build());
+        environment.servlets().addFilter("RequestFilterAuth", authFilter).
+            addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
+    }
+    
+    
+    public Config build()
+    {
+//        final DirectBasicAuthClient directBasicAuthClient = new DirectBasicAuthClient(new SimpleTestUsernamePasswordAuthenticator());
+        
+        
+        final KeycloakOidcClient oidcClient = new KeycloakOidcClient(getPac4jConfig());
+        oidcClient.setAuthorizationGenerator((ctx, session, profile) -> {
+            profile.addRole("user");
+            return Optional.of(profile);
+        });
+        oidcClient.setAuthenticator(new UserInfoOidcAuthenticator(getPac4jConfig()));
+        oidcClient.setCallbackUrl("http://localhost:8080/hello-world");
+        oidcClient.setCallbackUrlResolver(new NoParameterCallbackUrlResolver());
+
+
+        final Clients clients = new Clients(oidcClient);
+        final Config config = new Config(clients);
+        //config.setAuthorizer(new RequireAnyRoleAuthorizer("user"));
+        config.addAuthorizer("custom", new CustomAuthorizer());
+        return config;
+    }
+    
+    private KeycloakOidcConfiguration getPac4jConfig()
+    {
+        KeycloakOidcConfiguration config = new KeycloakOidcConfiguration();
+        config.setClientId("dropwizard-project");
+        config.setRealm("dev");
+        config.setBaseUri("http://localhost:8082");
+        config.setSecret("DfHOUiU75hdyEkmPLxE1eZyYvw5MAF2D");
+        //config.setConnectTimeout(5000000);
+        //config.setPkceMethod(CodeChallengeMethod.getDefault());
+        return config;
     }
     
     private void initCors(final Environment environment) {

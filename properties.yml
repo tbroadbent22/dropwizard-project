@@ -27,19 +27,6 @@
 template: Hello, %s!
 defaultName: Stranger
 
-pac4j:
-    clients:
-        - org.pac4j.oidc.client.KeycloakOidcClient:
-            callbackUrl: "http://localhost:8082/auth"
-            authenticator:
-                class: org.pac4j.jwt.credentials.authenticator.JwtAuthenticator
-
-            configuration:
-                clientId: "dropwizard-project"
-                discoveryURI: "http://localhost:8082/auth/realms/dev/protocol/openid-connect/auth"
-                scope: "openid"
-                useNonce: true
-                responseType: "code"
 
 #pac4j: 
 #    globalFilters:
