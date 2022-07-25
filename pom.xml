@@ -36,6 +36,16 @@
         </dependency>
         <dependency>
             <groupId>org.pac4j</groupId>
+            <artifactId>jee-pac4j</artifactId>
+            <version>6.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.pac4j</groupId>
+            <artifactId>jax-rs-pac4j</artifactId>
+            <version>2.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.pac4j</groupId>
             <artifactId>pac4j-http</artifactId>
             <version>5.4.3</version>
         </dependency>

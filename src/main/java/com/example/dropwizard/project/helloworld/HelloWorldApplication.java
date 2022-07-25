@@ -8,6 +8,7 @@ import com.example.dropwizard.helloworld.keycloak.CustomAuthorizer;
 import com.example.dropwizard.helloworld.keycloak.KeycloakConfig;
 import com.example.dropwizard.helloworld.keycloak.KeycloakJettyAuthenticatorExt;
 import com.example.dropwizard.helloworld.keycloak.KeycloakResolver;
+import com.example.dropwizard.project.helloworld.resources.CallbackResource;
 import com.example.dropwizard.project.helloworld.resources.HelloWorldResource;
 import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import io.dropwizard.Application;
@@ -27,12 +28,20 @@ import org.pac4j.core.client.Clients;
 import org.pac4j.core.client.DirectClient;
 import org.pac4j.core.config.Config;
 import org.pac4j.core.context.session.SessionStore;
+import org.pac4j.core.engine.CallbackLogic;
+import org.pac4j.core.http.callback.CallbackUrlResolver;
 import org.pac4j.core.http.callback.NoParameterCallbackUrlResolver;
+import org.pac4j.core.http.callback.PathParameterCallbackUrlResolver;
+import org.pac4j.core.http.callback.QueryParameterCallbackUrlResolver;
 import org.pac4j.core.profile.creator.ProfileCreator;
 import org.pac4j.dropwizard.Pac4jBundle;
 import org.pac4j.dropwizard.Pac4jFactory;
 import org.pac4j.http.client.direct.DirectBasicAuthClient;
 import org.pac4j.http.credentials.authenticator.test.SimpleTestUsernamePasswordAuthenticator;
+import org.pac4j.jax.rs.features.Pac4JSecurityFeature;
+import org.pac4j.jax.rs.jersey.features.Pac4JValueFactoryProvider;
+import org.pac4j.jax.rs.servlet.features.ServletJaxRsContextFactoryProvider;
+import org.pac4j.jee.filter.CallbackFilter;
 import org.pac4j.jee.filter.SecurityFilter;
 import org.pac4j.oidc.client.KeycloakOidcClient;
 import org.pac4j.oidc.config.KeycloakOidcConfiguration;
@@ -71,39 +80,53 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
             configuration.getDefaultName()
         );
         
+        final CallbackResource cbResource = new CallbackResource();
+        
 
 
         System.out.println("ENV: " + environment);
         environment.jersey().register(resource);
-//        initCors(environment);
+//        environment.jersey().register(cbResource);
+        initCors(environment);
 //        initAuth(environment);
         
         SecurityFilter authFilter = new SecurityFilter();
         authFilter.setSharedConfig(build());
+        
+//        CallbackFilter cbFilter = new CallbackFilter();
+//        environment.servlets().addFilter("callbackFilter", cbFilter);
+//        cbFilter.setSharedConfig(build());
+        
+//        System.out.println("DEFAULT URL: " + cbFilter.getDefaultUrl());
+
+    environment.jersey().register(ServletJaxRsContextFactoryProvider.class);
+    environment.jersey().register(new Pac4JSecurityFeature());
+    environment.jersey().register(new Pac4JValueFactoryProvider.Binder());
+        
         environment.servlets().addFilter("RequestFilterAuth", authFilter).
-            addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
+            addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/api/*");
     }
     
     
     public Config build()
     {
-//        final DirectBasicAuthClient directBasicAuthClient = new DirectBasicAuthClient(new SimpleTestUsernamePasswordAuthenticator());
-        
-        
         final KeycloakOidcClient oidcClient = new KeycloakOidcClient(getPac4jConfig());
         oidcClient.setAuthorizationGenerator((ctx, session, profile) -> {
-            profile.addRole("user");
+            profile.addRole("USER");
             return Optional.of(profile);
         });
         oidcClient.setAuthenticator(new UserInfoOidcAuthenticator(getPac4jConfig()));
-        oidcClient.setCallbackUrl("http://localhost:8080/hello-world");
+        oidcClient.setCallbackUrl("http://localhost:8080/callback");
         oidcClient.setCallbackUrlResolver(new NoParameterCallbackUrlResolver());
+        oidcClient.setName("dropwizard-project");
 
 
-        final Clients clients = new Clients(oidcClient);
+        final Clients clients = new Clients("http://localhost:8080/callback",oidcClient);
         final Config config = new Config(clients);
         //config.setAuthorizer(new RequireAnyRoleAuthorizer("user"));
         config.addAuthorizer("custom", new CustomAuthorizer());
+//        CallbackLogic cbl = new CallbackLogic()
+//        config.setCallbackLogic();
         return config;
     }
     
@@ -114,6 +137,8 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
         config.setRealm("dev");
         config.setBaseUri("http://localhost:8082");
         config.setSecret("DfHOUiU75hdyEkmPLxE1eZyYvw5MAF2D");
+        config.setDiscoveryURI("http://localhost:8082/.well-known/openid-configuration");
+//        config.setUseNonce(true);
         //config.setConnectTimeout(5000000);
         //config.setPkceMethod(CodeChallengeMethod.getDefault());
         return config;
@@ -153,12 +178,12 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
 
         
 //        getPac4jConfig();
-        
-        KeycloakConfig config = getConfig();
-        final KeycloakJettyAuthenticatorExt keycloak = new KeycloakJettyAuthenticatorExt();
-        environment.getApplicationContext().getSecurityHandler().setAuthenticator(keycloak);
-        final KeycloakResolver keycloakResolver = new KeycloakResolver(config);
-        keycloak.setConfigResolver(keycloakResolver);
+//        
+//        KeycloakConfig config = getConfig();
+//        final KeycloakJettyAuthenticatorExt keycloak = new KeycloakJettyAuthenticatorExt();
+//        environment.getApplicationContext().getSecurityHandler().setAuthenticator(keycloak);
+//        final KeycloakResolver keycloakResolver = new KeycloakResolver(config);
+//        keycloak.setConfigResolver(keycloakResolver);
 
 //        final SessionHandler sessionHandler = new SessionHandler();
 //        sessionHandler.getSessionCookieConfig().setSecure(false);
@@ -166,18 +191,18 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
 //        environment.servlets().setSessionHandler(sessionHandler);
     }
 
-    private KeycloakConfig getConfig()
-    {
-        KeycloakConfig config = new KeycloakConfig();
-        config.setAuthServerUrl("http://localhost:8081");
-        config.setSecret("34f37982-733c-49ed-a840-11166f044ef8");
-        config.setPassword("password");
-        config.setRealm("dev");
-        config.setUser("tony");
-        config.setResource("dropwizard-project");
-        
-        return config;
-    }
+//    private KeycloakConfig getConfig()
+//    {
+//        KeycloakConfig config = new KeycloakConfig();
+//        config.setAuthServerUrl("http://localhost:8081");
+//        config.setSecret("34f37982-733c-49ed-a840-11166f044ef8");
+//        config.setPassword("password");
+//        config.setRealm("dev");
+//        config.setUser("tony");
+//        config.setResource("dropwizard-project");
+//        
+//        return config;
+//    }
 //    
 //    private OidcAuthenticator getPac4jConfig()
 //    {   
