@@ -5,12 +5,8 @@
 package com.example.dropwizard.project.helloworld;
 
 import com.example.dropwizard.helloworld.keycloak.CustomAuthorizer;
-import com.example.dropwizard.helloworld.keycloak.KeycloakConfig;
-import com.example.dropwizard.helloworld.keycloak.KeycloakJettyAuthenticatorExt;
-import com.example.dropwizard.helloworld.keycloak.KeycloakResolver;
 import com.example.dropwizard.project.helloworld.resources.CallbackResource;
 import com.example.dropwizard.project.helloworld.resources.HelloWorldResource;
-import com.nimbusds.oauth2.sdk.pkce.CodeChallengeMethod;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -20,28 +16,21 @@ import java.util.Optional;
 import java.util.Set;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.ext.Providers;
 import org.eclipse.jetty.security.ConstraintMapping;
 import org.eclipse.jetty.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.eclipse.jetty.util.security.Constraint;
 import org.pac4j.core.client.Clients;
-import org.pac4j.core.client.DirectClient;
 import org.pac4j.core.config.Config;
-import org.pac4j.core.context.session.SessionStore;
-import org.pac4j.core.engine.CallbackLogic;
-import org.pac4j.core.http.callback.CallbackUrlResolver;
 import org.pac4j.core.http.callback.NoParameterCallbackUrlResolver;
-import org.pac4j.core.http.callback.PathParameterCallbackUrlResolver;
-import org.pac4j.core.http.callback.QueryParameterCallbackUrlResolver;
-import org.pac4j.core.profile.creator.ProfileCreator;
 import org.pac4j.dropwizard.Pac4jBundle;
 import org.pac4j.dropwizard.Pac4jFactory;
-import org.pac4j.http.client.direct.DirectBasicAuthClient;
-import org.pac4j.http.credentials.authenticator.test.SimpleTestUsernamePasswordAuthenticator;
 import org.pac4j.jax.rs.features.Pac4JSecurityFeature;
+import org.pac4j.jax.rs.filters.CallbackFilter;
 import org.pac4j.jax.rs.jersey.features.Pac4JValueFactoryProvider;
 import org.pac4j.jax.rs.servlet.features.ServletJaxRsContextFactoryProvider;
-import org.pac4j.jee.filter.CallbackFilter;
 import org.pac4j.jee.filter.SecurityFilter;
 import org.pac4j.oidc.client.KeycloakOidcClient;
 import org.pac4j.oidc.config.KeycloakOidcConfiguration;
@@ -49,6 +38,9 @@ import org.pac4j.oidc.credentials.authenticator.UserInfoOidcAuthenticator;
 
 public class HelloWorldApplication extends Application<HelloWorldConfiguration>
 {
+    @Context
+    private Providers providers;
+    
     public static void main(String[] args) throws Exception {
         new HelloWorldApplication().run(args);
     }
@@ -56,8 +48,8 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
  final Pac4jBundle<HelloWorldConfiguration> bundle = new Pac4jBundle<HelloWorldConfiguration>() {
         @Override
         public Pac4jFactory getPac4jFactory(HelloWorldConfiguration configuration) {
-//            return new Pac4jFactory();
-            return configuration.getPac4jFactory();
+            return new Pac4jFactory();
+//            return configuration.getPac4jFactory();
         }
     };
     
@@ -80,20 +72,29 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
             configuration.getDefaultName()
         );
         
+//        environment.jersey().register(new org.glassfish.hk2.utilities.binding.AbstractBinder() {
+//            @Override
+//            protected void configure() {
+//                // so that we can inject the config in resources if needed
+//                bind(build()).to(Config.class);
+//            }
+//        });
         final CallbackResource cbResource = new CallbackResource();
         
 
 
         System.out.println("ENV: " + environment);
         environment.jersey().register(resource);
-//        environment.jersey().register(cbResource);
+        environment.jersey().register(cbResource);
         initCors(environment);
 //        initAuth(environment);
         
         SecurityFilter authFilter = new SecurityFilter();
         authFilter.setSharedConfig(build());
         
-//        CallbackFilter cbFilter = new CallbackFilter();
+        CallbackFilter cbFilter = new CallbackFilter(providers);
+        
+        
 //        environment.servlets().addFilter("callbackFilter", cbFilter);
 //        cbFilter.setSharedConfig(build());
         
@@ -123,10 +124,9 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
 
         final Clients clients = new Clients("http://localhost:8080/callback",oidcClient);
         final Config config = new Config(clients);
+//        config.setCallbackLogic(new DefaultCallbackLogic());
         //config.setAuthorizer(new RequireAnyRoleAuthorizer("user"));
         config.addAuthorizer("custom", new CustomAuthorizer());
-//        CallbackLogic cbl = new CallbackLogic()
-//        config.setCallbackLogic();
         return config;
     }
     
@@ -134,7 +134,7 @@ public class HelloWorldApplication extends Application<HelloWorldConfiguration>
     {
         KeycloakOidcConfiguration config = new KeycloakOidcConfiguration();
         config.setClientId("dropwizard-project");
-        config.setRealm("dev");
+        config.setRealm("Dev");
         config.setBaseUri("http://localhost:8082");
         config.setSecret("DfHOUiU75hdyEkmPLxE1eZyYvw5MAF2D");
         config.setDiscoveryURI("http://localhost:8082/.well-known/openid-configuration");
