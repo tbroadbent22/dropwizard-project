@@ -12,11 +12,12 @@ import org.pac4j.jax.rs.annotations.Pac4JCallback;
  *
  * @author TBroadbent
  */
-@Path("/callback")
+@Path("/")
 public class CallbackResource
 {
     @GET
-    @Pac4JCallback
+    @Path("/callback")
+    @Pac4JCallback(defaultUrl = "/api/hello-world", defaultClient = "KeycloakOidcClient")
     public void callbackGet() {
     }
 }

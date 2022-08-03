@@ -34,17 +34,6 @@ public class HelloWorldConfiguration extends Configuration
     @NotEmpty
     private String defaultName = "Stranger";
     
-//    @NotNull
-//    @Nullable
-////    Pac4jFactory pac4j = new Pac4jFactory();
-//
-//    @JsonProperty("pac4j")
-//    public Pac4jFactory getPac4jFactory() {
-//        return pac4j;
-//    }
-//
-//    @JsonProperty("pac4j")
-//    public void setPac4jFactory(Pac4jFactory pac4jFactory) {
-//        this.pac4j = pac4jFactory;
-//    }
+    @JsonProperty("pac4j")
+    Pac4jFactory pac4jFactory = new Pac4jFactory();
 }

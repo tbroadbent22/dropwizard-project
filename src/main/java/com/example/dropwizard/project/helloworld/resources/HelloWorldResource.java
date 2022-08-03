@@ -4,18 +4,16 @@
  */
 package com.example.dropwizard.project.helloworld.resources;
 
-import com.codahale.metrics.annotation.Timed;
-import com.example.dropwizard.helloworld.auth.AuthorizeUser;
 import com.example.dropwizard.project.helloworld.api.Saying;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import org.pac4j.core.profile.ProfileManager;
+import org.pac4j.jax.rs.annotations.Pac4JProfileManager;
 
 @Path("/api/hello-world")
 @Produces(MediaType.APPLICATION_JSON)
@@ -31,8 +29,7 @@ public class HelloWorldResource
     }
 
     @GET
-    @Timed
-    public Saying sayHello(@Context final HttpServletRequest request, @QueryParam("name") Optional<String> name) {
+    public Saying sayHello(@Pac4JProfileManager ProfileManager pm, @QueryParam("name") Optional<String> name) {
         System.out.println("TEST");
         final String value = String.format(template, name.orElse(defaultName));
 //        AuthorizeUser au = new AuthorizeUser("http://localhost:8081");
