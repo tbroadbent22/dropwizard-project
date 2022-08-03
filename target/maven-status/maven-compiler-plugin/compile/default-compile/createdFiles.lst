@@ -1,12 +1,13 @@
 com\example\dropwizard\helloworld\auth\UserInfo.class
 com\example\dropwizard\helloworld\keycloak\KeycloakConfig.class
-com\example\dropwizard\helloworld\auth\AuthorizeUser.class
 com\example\dropwizard\project\helloworld\api\KeycloakRequest.class
 com\example\dropwizard\helloworld\keycloak\KeycloakConfig$Credentials.class
-com\example\dropwizard\helloworld\keycloak\KeycloakJettyAuthenticatorExt.class
 com\example\dropwizard\helloworld\keycloak\KeycloakResolver.class
+com\example\dropwizard\project\helloworld\HelloWorldApplication$1.class
+com\example\dropwizard\project\helloworld\HelloWorldApplication.class
+com\example\dropwizard\helloworld\auth\AuthorizeUser.class
+com\example\dropwizard\helloworld\keycloak\KeycloakJettyAuthenticatorExt.class
 com\example\dropwizard\project\helloworld\api\Saying.class
 com\example\dropwizard\project\helloworld\resources\HelloWorldResource.class
 com\example\dropwizard\project\helloworld\health\TemplateHealthCheck.class
 com\example\dropwizard\project\helloworld\HelloWorldConfiguration.class
-com\example\dropwizard\project\helloworld\HelloWorldApplication.class

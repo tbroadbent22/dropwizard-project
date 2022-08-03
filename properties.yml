@@ -1,2 +1,40 @@
+
+#pac4j:
+#  # those protect the whole application at Jersey level
+#  globalFilters:
+#    - matchers: excludeUserSession
+#      authorizers: isAuthenticated
+#  servlet:
+#    security: 
+#        - mapping: /*
+#    callback: 
+#        - mapping: /*
+#    logout: 
+#        - mapping: /*
+#  matchers:
+#    # this let the /user/session url be handled by the annotations
+#    excludeUserSession:
+#      class: org.pac4j.core.matching.PathMatcher
+#      excludedPath: 
+#          - ^/*
+#  callbackUrl: /user/session
+#  defaultClient: DirectBasicAuthClient
+#  clients:
+#    - org.pac4j.http.client.direct.DirectBasicAuthClient:
+#        authenticator:
+#          class: org.pac4j.http.credentials.authenticator.test.SimpleTestUsernamePasswordAuthenticator
+          
 template: Hello, %s!
 defaultName: Stranger
+
+
+#pac4j: 
+#    globalFilters:
+#    - matchers: excludeUserSession
+#      authorizers: isAuthenticated
+#    callbackUrl: /auth
+#    clients:
+#    - org.pac4j.oidc.client.KeycloakOidcClient:
+#        authenticator:
+#          class: org.pac4j.oidc.credentials.authenticator.OidcAuthenticator
+            
